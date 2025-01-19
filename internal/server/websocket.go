@@ -37,6 +37,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("decode token error: %v, token: %v", err, token)
 		http.Error(w, "decode token error", http.StatusInternalServerError)
+		return
 	}
 
 	client := &models.Client{}
@@ -44,10 +45,15 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("token error: %v, token: %v", err, token)
 		http.Error(w, "token error", http.StatusInternalServerError)
+		return
 	}
 
 	conn, _, _, err := ws.UpgradeHTTP(r, w)
-	log.Println("websocket upgrade error:", err)
+	if err != nil {
+		log.Println("websocket upgrade error:", err)
+		http.Error(w, "websocket upgrade error", http.StatusInternalServerError)
+		return
+	}
 
 	client.IP = utils.GetClientIP(r)
 
