@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"go-push/internal/config"
+	"log"
 	"time"
 )
 
@@ -34,16 +35,19 @@ func GetOrSetStructWithExpiration(key string, value interface{}, expiration time
 	if errors.Is(err, redis.Nil) {
 		jsonData, err := json.Marshal(value)
 		if err != nil {
+			log.Printf("Failed to serialize struct: %v", err) // 打印日志
 			return fmt.Errorf("failed to serialize struct: %v", err)
 		}
 
 		// 存储到 Redis
 		err = client.Set(ctx, key, jsonData, expiration).Err()
 		if err != nil {
+			log.Printf("Failed to store struct in Redis: %v", err) // 打印日志
 			return fmt.Errorf("failed to store struct in Redis: %v", err)
 		}
 		return nil
 	} else if err != nil {
+		log.Printf("Failed to store struct in Redis: %v", err) // 打印日志
 		// 查询发生其他错误
 		fmt.Printf("Error querying key: %v\n", err)
 	}
