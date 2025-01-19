@@ -40,7 +40,16 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "token error", http.StatusInternalServerError)
 		return
 	}
-
+	if r.Header.Get("Upgrade") != "websocket" {
+		log.Printf("Invalid Upgrade header: %s", r.Header.Get("Upgrade"))
+		http.Error(w, "Invalid WebSocket handshake", http.StatusBadRequest)
+		return
+	}
+	if r.Header.Get("Connection") != "Upgrade" {
+		log.Printf("Invalid Connection header: %s", r.Header.Get("Connection"))
+		http.Error(w, "Invalid WebSocket handshake", http.StatusBadRequest)
+		return
+	}
 	conn, _, _, err := ws.UpgradeHTTP(r, w)
 	if err != nil {
 		log.Println("websocket upgrade error:", err)

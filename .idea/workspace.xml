@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b1d0188d-caf6-418a-bc89-83b04745b0e6" name="Changes" comment="project init">
-      <change afterPath="$PROJECT_DIR$/Deployment.yaml" afterDir="false" />
+    <list default="true" id="b1d0188d-caf6-418a-bc89-83b04745b0e6" name="Changes" comment="fix: redis key">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -112,9 +111,27 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="project init" />
-    <option name="LAST_COMMIT_MESSAGE" value="project init" />
+    <MESSAGE value="优化命令" />
+    <MESSAGE value="健康检查接口" />
+    <MESSAGE value="fix: 修复逻辑错误" />
+    <MESSAGE value="fix: ws校验失败直接返回" />
+    <MESSAGE value="fix: 打印日志" />
+    <MESSAGE value="fix: json Marshal" />
+    <MESSAGE value="fix: redis key" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix: redis key" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
