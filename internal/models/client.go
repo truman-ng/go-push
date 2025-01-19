@@ -14,7 +14,7 @@ type Client struct {
 	LastPingTime time.Time
 	Lock         sync.RWMutex
 	Token        string
-	Send         chan []byte
+	Send         chan []byte `json:"-"`
 }
 
 func (client *Client) UpdatePingTime() {
