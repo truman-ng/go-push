@@ -32,19 +32,20 @@ func NewRedisClient(cfg *config.Config) {
 func GetOrSetStructWithExpiration(key string, value interface{}, expiration time.Duration) error {
 	_, err := client.Get(ctx, key).Result()
 	if errors.Is(err, redis.Nil) {
-		return fmt.Errorf("key does not exist: %s", key)
-	} else if err != nil {
-		return fmt.Errorf("failed to get value from Redis: %v", err)
-	}
-	jsonData, err := json.Marshal(value)
-	if err != nil {
-		return fmt.Errorf("failed to serialize struct: %v", err)
-	}
+		jsonData, err := json.Marshal(value)
+		if err != nil {
+			return fmt.Errorf("failed to serialize struct: %v", err)
+		}
 
-	// 存储到 Redis
-	err = client.Set(ctx, key, jsonData, expiration).Err()
-	if err != nil {
-		return fmt.Errorf("failed to store struct in Redis: %v", err)
+		// 存储到 Redis
+		err = client.Set(ctx, key, jsonData, expiration).Err()
+		if err != nil {
+			return fmt.Errorf("failed to store struct in Redis: %v", err)
+		}
+		return nil
+	} else if err != nil {
+		// 查询发生其他错误
+		fmt.Printf("Error querying key: %v\n", err)
 	}
 	return nil
 }
