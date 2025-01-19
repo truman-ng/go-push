@@ -33,15 +33,8 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing token", http.StatusUnauthorized)
 		return
 	}
-	decodeToken, err := utils.DecodeBase64(token)
-	if err != nil {
-		log.Printf("decode token error: %v, token: %v", err, token)
-		http.Error(w, "decode token error", http.StatusInternalServerError)
-		return
-	}
-
 	client := &models.Client{}
-	err = redis.GetStructValue(clientKey+decodeToken, client)
+	err := redis.GetStructValue(clientKey+token, client)
 	if err != nil {
 		log.Printf("token error: %v, token: %v", err, token)
 		http.Error(w, "token error", http.StatusInternalServerError)
