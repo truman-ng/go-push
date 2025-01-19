@@ -41,7 +41,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &models.Client{}
-	err = redis.GetStructValue(decodeToken, client)
+	err = redis.GetStructValue(clientKey+decodeToken, client)
 	if err != nil {
 		log.Printf("token error: %v, token: %v", err, token)
 		http.Error(w, "token error", http.StatusInternalServerError)
