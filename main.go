@@ -8,6 +8,7 @@ import (
 	"go-push/pkg/redis"
 	"io"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -21,6 +22,9 @@ func main() {
 	initRedis(cfg)
 	route := gin.Default()
 	server.RegisterRoutes(route)
+	route.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
+	})
 
 	go server.StartWebSocketServer(cfg.Server.WSPort)
 	go server.ClientTimeoutChecker()
