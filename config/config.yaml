@@ -1,13 +1,15 @@
 log:
   file: log/gin.log
-redis:
-   addrs:
-     - "192.68.1.102:6379"
-     - "192.68.1.103:6379"
-     - "192.68.1.104:6379"
-   password: ""
-   client-name: "go-push"
-
+  redis:
+      addrs:
+        - "172.20.8.10:6380"
+        - "172.20.8.10:6381"
+        - "172.20.8.10:6382"
+        - "172.20.8.10:6383"
+        - "172.20.8.10:6384"
+        - "172.20.8.10:6385"
+      password: "test_2023"
+      client-name: "go-push"
 server:
   http-port: 8080
   ws-port: 8081
