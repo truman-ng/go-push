@@ -4,7 +4,8 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b1d0188d-caf6-418a-bc89-83b04745b0e6" name="Changes" comment="fix: redis key">
+    <list default="true" id="b1d0188d-caf6-418a-bc89-83b04745b0e6" name="Changes" comment="fix: config">
+      <change afterPath="$PROJECT_DIR$/push.jenkinsfile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -71,7 +72,7 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;onboarding.tips.debug.path&quot;: &quot;/Users/nixonfaud/Downloads/go/go-push/main.go&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;settings.sync&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.ide.settings.spelling&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -111,6 +112,9 @@
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="Jenkinsfile" />
+  </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
@@ -131,7 +135,9 @@
     <MESSAGE value="fix: 打印日志" />
     <MESSAGE value="fix: json Marshal" />
     <MESSAGE value="fix: redis key" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix: redis key" />
+    <MESSAGE value="fix: 检查请求头是否符合 WebSocket 协议" />
+    <MESSAGE value="fix: config" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix: config" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

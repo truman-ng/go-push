@@ -1,0 +1,95 @@
+pipeline {
+    agent {
+        node {
+            label 'go'
+        }
+    }
+
+    parameters {
+        string(name: 'NAMESPACES', defaultValue: "master,test", description: '选择部署到哪个命名空间,可以输入多个环境, 用`,`分割')
+    }
+
+    environment {
+        IMAGE_REGISTRY = 'www.com' #website address
+        IMAGE_PREFIX = 'go' # 仓库名
+
+
+        NEXUS_CREDENTIAL_ID = 'nexus' # DevOps Project中的credentials
+        GITLAB_CREDENTIAL_ID = 'gitlab'  # DevOps Project中的credentials
+        KUBECONFIG_CREDENTIAL_ID = 'kubeconfig'  # DevOps Project中的credentials
+
+        CURRENT_BUILD_NUMBER = "$currentBuild.number"
+
+        APP_NAME = "go-push"
+
+        REQUEST_CPU = "100m"
+        LIMIT_CPU = "2000m"
+
+        REQUEST_MEMORY = "500Mi"
+        LIMIT_MEMORY = "4Gi"
+
+        BUILD_TIME = sh(script: "echo `TZ=Asia/Hong_Kong date +%Y%m%d.%H%M%S`", returnStdout: true).trim()
+        APP_VERSION = "1.0.0"
+        TAG_NAME = "v1.0.0-$BUILD_TIME"
+    }
+
+    stages {
+        stage('checkout scm') {
+            when {
+                expression {
+                    currentBuild.buildCauses[0].shortDescription != 'Branch indexing'
+                }
+            }
+            steps {
+                checkout(scm)
+            }
+        }
+
+        stage('build & push 镜像') {
+            when {
+                expression {
+                    currentBuild.buildCauses[0].shortDescription != 'Branch indexing'
+                }
+            }
+            steps {
+                container('go') {
+                    sh 'docker build --no-cache -f Dockerfile -t $IMAGE_REGISTRY/$IMAGE_PREFIX/$APP_NAME:$TAG_NAME .'
+                    withCredentials([usernamePassword(
+                            passwordVariable: 'DOCKER_PASSWORD',
+                            usernameVariable: 'DOCKER_USERNAME',
+                            credentialsId: "$NEXUS_CREDENTIAL_ID")
+                    ]) {
+                        sh 'echo "$DOCKER_PASSWORD" | docker login $IMAGE_REGISTRY -u "$DOCKER_USERNAME" --password-stdin'
+
+                        sh 'docker push $IMAGE_REGISTRY/$IMAGE_PREFIX/$APP_NAME:$TAG_NAME'
+
+                        sh 'docker tag $IMAGE_REGISTRY/$IMAGE_PREFIX/$APP_NAME:$TAG_NAME $IMAGE_REGISTRY/$IMAGE_PREFIX/$APP_NAME:latest'
+                        sh 'docker push $IMAGE_REGISTRY/$IMAGE_PREFIX/$APP_NAME:latest'
+                    }
+                }
+            }
+        }
+
+        stage('部署服务') {
+            when {
+                expression {
+                    currentBuild.buildCauses[0].shortDescription != 'Branch indexing'
+                }
+            }
+            steps {
+                container('go') {
+                    withCredentials([kubeconfigFile(credentialsId: env.KUBECONFIG_CREDENTIAL_ID, variable: 'KUBECONFIG')]) {
+                        script {
+                            def namespaces = params.NAMESPACES.split(',');
+                            for (namespace in namespaces) {
+                                env.NAMESPACE = namespace
+                                sh 'envsubst < Deployment.yaml | kubectl apply -f -'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
