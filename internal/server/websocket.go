@@ -62,6 +62,9 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		httpError(w, "Invalid WebSocket handshake", http.StatusBadRequest)
 		return
 	}
+	
+	// 强制覆盖 header，兼容 gobwas 的严格逻辑 
+	r.Header.Set("Connection", "Upgrade") 
 
 	// 3. 执行协议升级
 	conn, _, _, err := ws.UpgradeHTTP(r, w)
