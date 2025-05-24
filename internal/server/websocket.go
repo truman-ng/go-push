@@ -10,109 +10,143 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 )
 
 var (
-	//clients     = make(map[string]*models.Client)
-	//clientsLock sync.RWMutex
 	clientKey     = "ws:client:token:"
 	clientManager = NewClientManager()
 )
 
+// 启动 WebSocket 服务
 func StartWebSocketServer(port string) {
-	http.HandleFunc("/ws", wsHandler)
-	log.Println("Starting WebSocket Server on port", port)
-	err := http.ListenAndServe(":"+port, nil)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/ws", wsHandler)
+
+	server := &http.Server{
+		Addr:    ":" + port,
+		Handler: mux,
+	}
+
+	log.Println("✅ WebSocket Server started on port", port)
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("❌ WebSocket Server failed to start: %v", err)
 	}
 }
+
+// WebSocket 握手处理逻辑
 func wsHandler(w http.ResponseWriter, r *http.Request) {
+	for k, v := range r.Header {
+		log.Printf("🔍 Header [%s] = %v", k, v)
+	}
+
+	// 1. Token 校验
 	token := r.URL.Query().Get("token")
 	if token == "" {
-		http.Error(w, "Missing token", http.StatusUnauthorized)
+		httpError(w, "Missing token", http.StatusUnauthorized)
 		return
 	}
+
 	client := &models.Client{}
 	err := redis.GetStructValue(clientKey+token, client)
 	if err != nil {
-		log.Printf("token error: %v, token: %v", err, token)
-		http.Error(w, "token error", http.StatusInternalServerError)
+		log.Printf("❌ Redis token error: %v, token: %v", err, token)
+		httpError(w, "Token error", http.StatusInternalServerError)
 		return
 	}
-	if r.Header.Get("Upgrade") != "websocket" {
-		log.Printf("Invalid Upgrade header: %s", r.Header.Get("Upgrade"))
-		http.Error(w, "Invalid WebSocket handshake", http.StatusBadRequest)
+
+	// 2. WebSocket 请求头校验（更健壮）
+	if !isWebSocketRequest(r) {
+		log.Printf("❌ Invalid WebSocket headers. Upgrade: %s, Connection: %s",
+			r.Header.Get("Upgrade"), r.Header.Get("Connection"))
+		httpError(w, "Invalid WebSocket handshake", http.StatusBadRequest)
 		return
 	}
-	if r.Header.Get("Connection") != "Upgrade" {
-		log.Printf("Invalid Connection header: %s", r.Header.Get("Connection"))
-		http.Error(w, "Invalid WebSocket handshake", http.StatusBadRequest)
-		return
-	}
+
+	// 3. 执行协议升级
 	conn, _, _, err := ws.UpgradeHTTP(r, w)
 	if err != nil {
-		log.Println("websocket upgrade error:", err)
-		http.Error(w, "websocket upgrade error", http.StatusInternalServerError)
+		log.Printf("❌ WebSocket upgrade error: %v", err)
+		httpError(w, "WebSocket upgrade failed", http.StatusInternalServerError)
 		return
 	}
 
+	// 4. 初始化连接
 	client.IP = utils.GetClientIP(r)
-
-	log.Println("client info: ", client)
+	log.Printf("✅ Client connected: %+v", client)
 	clientManager.Register <- client
 
+	// 5. 开启发送通道和接收关闭监听
 	go handleWrite(conn, client)
-
 	handleClose(conn, client)
 
+	// 6. 主接收循环
 	for {
 		_, _, err := wsutil.ReadClientData(conn)
-		//msg, op, err := wsutil.ReadClientData(conn)
 		if err != nil {
 			break
 		}
-		// 打印接收到的消息
-		//log.Printf("Received message from client: %s (op: %d)", string(msg), op)
-
-		// 可选：回显消息到客户端
-		//err = wsutil.WriteServerMessage(conn, op, msg)
-		//if err != nil {
-		//	log.Printf("Error writing message to client: %v", err)
-		//	break
-		//}
+		// 可选：这里可处理消息
 	}
 }
 
+// isWebSocketRequest checks if the request is a valid WebSocket handshake request.
+func isWebSocketRequest(r *http.Request) bool {
+	// Check if Upgrade header equals "websocket" (case-insensitive, trimmed)
+	if !strings.EqualFold(strings.TrimSpace(r.Header.Get("Upgrade")), "websocket") {
+		return false
+	}
+
+	// Parse Connection header values (e.g., "keep-alive, Upgrade")
+	connHeader := r.Header.Values("Connection")
+	for _, val := range connHeader {
+		// Split multiple values by comma
+		for _, part := range strings.Split(val, ",") {
+			if strings.EqualFold(strings.TrimSpace(part), "upgrade") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// 将错误返回客户端
+func httpError(w http.ResponseWriter, msg string, code int) {
+	http.Error(w, msg, code)
+}
+
+// 写消息循环
 func handleWrite(conn net.Conn, client *models.Client) {
 	for message := range client.Send {
-		err := wsutil.WriteServerMessage(conn, ws.OpText, message)
-		if err != nil {
-			log.Printf("client: %v write error:\n %v", client, err)
+		if err := wsutil.WriteServerMessage(conn, ws.OpText, message); err != nil {
+			log.Printf("❌ Write error for client %v: %v", client, err)
 		}
 	}
 }
 
+// 断开连接监听
 func handleClose(conn net.Conn, client *models.Client) {
-	defer func(conn net.Conn) {
-		err := conn.Close()
-		if err != nil {
-			log.Printf("client: %v close error:\n %v", client, err)
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Printf("⚠️ Client %v close error: %v", client, err)
 		}
-	}(conn)
-	defer func() { clientManager.Unregister <- client }()
+	}()
+	defer func() {
+		clientManager.Unregister <- client
+	}()
+
 	for {
 		_, _, err := wsutil.ReadClientData(conn)
 		if err != nil {
 			if err == io.EOF {
-				log.Printf("Client %s disconnected", client)
+				log.Printf("🔌 Client disconnected: %v", client)
 			} else {
-				log.Printf("Error reading client data: %v", err)
+				log.Printf("❌ Error reading from client %v: %v", client, err)
 			}
 			break
 		}
 
-		log.Printf("Client %s tried to send a message. Disconnecting.", client)
+		log.Printf("⚠️ Client %v tried to send message while disconnected", client)
 		break
 	}
 }
