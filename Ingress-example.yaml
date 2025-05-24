@@ -1,0 +1,29 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: ws-ingress
+  namespace: test
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Connection "";
+      proxy_set_header Connection "Upgrade";
+      proxy_set_header X-Request-From gateway;
+    nginx.ingress.kubernetes.io/connection-proxy-header: keep-alive
+    nginx.ingress.kubernetes.io/proxy-http-version: '1.1'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-forwarded-headers: 'true'
+spec:
+  rules:
+    - host: wstest.example.com
+      http:
+        paths:
+          - path: /push-ws(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: go-push
+                port:
+                  number: 8081
