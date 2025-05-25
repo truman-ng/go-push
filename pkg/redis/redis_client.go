@@ -16,7 +16,7 @@ var (
 	ctx    = context.Background()
 )
 
-func NewRedisClient(cfg *config.Config) {
+func NewRedisClient(cfg *config.Config) *redis.ClusterClient {
 	client = redis.NewClusterClient(&redis.ClusterOptions{
 		Addrs:      cfg.Redis.Addrs,
 		Password:   cfg.Redis.Password,
@@ -28,6 +28,7 @@ func NewRedisClient(cfg *config.Config) {
 		fmt.Println("redis ping err:", err)
 	}
 	fmt.Println("redis ping result:", pong)
+	return client
 }
 
 func GetOrSetStructWithExpiration(key string, value interface{}, expiration time.Duration) error {
