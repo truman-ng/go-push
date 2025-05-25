@@ -1,12 +1,13 @@
 package models
 
 import (
+	"net"
 	"sync"
 	"time"
 )
 
 type Client struct {
-	//Conn         *wsutil.Writer
+	Conn         net.Conn
 	IP           string
 	UserId       string
 	DeviceId     string
