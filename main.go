@@ -22,14 +22,20 @@ func main() {
 	initRedis(cfg)
 	route := gin.Default()
 	server.RegisterRoutes(route)
-	route.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
-	})
+
+	go server.DefaultClientManager.Start()
 
 	go server.StartWebSocketServer(cfg.Server.WSPort)
 	go server.ClientTimeoutChecker()
 
 	log.Printf("HTTP server started on port %s", cfg.Server.HttpPort)
+
+	route.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "healthy",
+		})
+	})
+
 	if err := route.Run(":" + cfg.Server.HttpPort); err != nil {
 		log.Fatalf("Failed to start HTTP server: %v", err)
 	}
