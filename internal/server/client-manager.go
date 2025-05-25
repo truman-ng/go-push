@@ -26,9 +26,13 @@ func NewClientManager() *ClientManager {
 		Register:   make(chan *models.Client),
 		Unregister: make(chan *models.Client),
 		HeartBeat:  make(chan *models.Client),
-		Broadcast:  make(chan []byte),
+		Broadcast:  make(chan []byte, 100),
 	}
 }
+
+// ✅ 暴露全局实例
+var DefaultClientManager = NewClientManager()
+
 func (cm *ClientManager) Start() {
 	for {
 		select {
@@ -74,26 +78,32 @@ func RemoveStaleClient() {
 		client.Lock.Unlock()
 
 		if timeSinceLastPing > 30*time.Second {
-			log.Printf("Removing stale client: %s, inactive for %v", key, timeSinceLastPing)
+			log.Printf("🕑 Removing stale client: %s, inactive for %v", key, timeSinceLastPing)
+
+			if client.Conn != nil {
+				if err := client.Conn.Close(); err != nil {
+					log.Printf("⚠️ Client %v close error: %v", client, err)
+				}
+			}
+
+			close(client.Send)
 			delete(clientManager.Clients, key)
 		}
+
 	}
 }
+
 func HeartBeatHandle(c *gin.Context) {
 	token := c.Query("token")
-	decodeToken, err := utils.DecodeBase64(token)
-	if err != nil {
-		log.Printf("decode token error: %v, token: %v", err, token)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"data": "decode token error"})
-	}
 	client := &models.Client{}
-	err = redis.GetStructValue(decodeToken, client)
+	err := redis.GetStructValue(clientKey+token, client)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"data": "token error"})
 	}
 	clientManager.HeartBeat <- client
 	c.JSON(http.StatusOK, gin.H{})
 }
+
 func GetToken(c *gin.Context) {
 	deviceId := c.Query("deviceId")
 	userId := c.Query("userId")
