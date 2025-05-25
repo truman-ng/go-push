@@ -19,7 +19,9 @@ func main() {
 	//initConfig()
 	cfg := config.LoadConfig("config/config.yaml")
 	initLog()
-	initRedis(cfg)
+	 rdb := redis.NewRedisClient(cfg) 
+	server.InitRedisConsumer(rdb) 
+
 	route := gin.Default()
 	server.RegisterRoutes(route)
 
@@ -54,7 +56,4 @@ func initLog() {
 	logFile := viper.GetString("log.file")
 	f, _ := os.Create(logFile)
 	gin.DefaultWriter = io.MultiWriter(f)
-}
-func initRedis(cfg *config.Config) {
-	redis.NewRedisClient(cfg)
 }
