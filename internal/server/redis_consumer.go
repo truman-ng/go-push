@@ -52,20 +52,38 @@ func startConsuming() {
 		for _, stream := range streams {
 			for _, msg := range stream.Messages {
 
-				// ✅ 将 map[string]interface{} 转成 JSON
-				jsonBytes, err := json.Marshal(msg.Values)
-				if err != nil {
-					log.Printf("❌ 消息 JSON 序列化失败: %v", err)
+				payloadRaw, ok := msg.Values["payload"]
+				if !ok {
+					log.Println("❌ Redis Stream 中未包含 payload 字段")
 					continue
 				}
+				
+				payloadStr, ok := payloadRaw.(string)
+				if !ok {
+					log.Println("❌ payload 字段不是字符串类型")
+					continue
+				}
+				
+				// payload 是个嵌套 JSON 字符串，需要先反序列化
+				var finalPayload map[string]interface{}
+				err := json.Unmarshal([]byte(payloadStr), &finalPayload)
+				if err != nil {
+					log.Printf("❌ payload 字符串解析失败: %v", err)
+					continue
+				}
+				
+				jsonBytes, err := json.Marshal(finalPayload)
+				if err != nil {
+					log.Printf("❌ 最终 JSON 序列化失败: %v", err)
+					continue
+				}
+				
 				select {
 				case clientManager.Broadcast <- jsonBytes:
-					// OK
 				default:
 					log.Printf("⚠️ Broadcast 通道已满，丢弃消息: %s", jsonBytes)
 				}
-
-				// ✅ 手动 ACK
+				
 				redisClient.XAck(ctx, streamKey, groupName, msg.ID)
 			}
 		}
