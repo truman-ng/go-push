@@ -1,0 +1,26 @@
+实现：
+> Java 端将推送消息写入 Redis Stream，由多个 Go 副本从 Redis Stream 中消费消息并推送。
+
+确保：
+- 每条消息只被一个副本消费（非广播）
+- 多个 Go 实例并发处理
+- 消费失败后可 ack 或 retry
+
+架构图
+```less
+
+          [Java Producer]
+                |
+                ▼
+      ┌────────────────────┐
+      │ Redis Stream:      │
+      │   key: push_stream │
+      └────────────────────┘
+           ▲       ▲
+      [Go Pod 1] [Go Pod 2] ...
+        消费组: push_group
+        消费者: pod_1 / pod_2 ...
+
+```
+
+
