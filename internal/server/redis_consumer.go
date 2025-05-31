@@ -72,9 +72,9 @@ func startConsuming() {
 					log.Printf("❌ payload 字符串解析失败: %v", err)
 					continue
 				}
-				 msgRoom, ok := finalPayload["roomId"].(string) 
-				if !ok || msgRoom == "" { 	
-					continue 
+				msgRoom, ok := finalPayload["roomId"].(string)
+				if !ok || msgRoom == "" {
+					continue
 				}
 
 				jsonBytes, err := json.Marshal(finalPayload)
