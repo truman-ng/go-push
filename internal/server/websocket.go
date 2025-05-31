@@ -48,7 +48,20 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	
+	roomParam := r.URL.Query().Get("roomIds")
+	if roomParam == "" {
+		httpError(w, "Missing room", http.StatusUnauthorized)
+		return
+	}
+	roomIds := strings.Split(roomParam, ",")
+	if len(roomIds) > 2 {
+		roomIds = roomIds[:2]
+	}
+	
 	client := &models.Client{}
+	client.RoomIds = roomIds
+
 	err := redis.GetStructValue(clientKey+token, client)
 	client.Token = token
 	client.LastPingTime = time.Now() // ✅ 第一次心跳时间
