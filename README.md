@@ -139,10 +139,27 @@ livenessProbe:
 连接示例：
 
 ```bash
-wss://localhost:8081/ws?token=base64TokenString
+wss://localhost:8081/ws?token=base64TokenString&roomIds=1001,2002
 ```
 
 客户端建立连接后，将持续接收服务端广播的消息。
+
+###  房间号参数（roomIds）
+
+- `roomIds` 是可选参数，用于指定客户端关注的房间。
+
+- 格式为逗号分隔的房间号字符串（目前设置支持两个，可根据需求调整）：
+
+```text
+?roomIds=1001,2002
+```
+    
+
+- 超过两个房间号会被忽略，只取前两个。
+
+- 服务端广播消息时，**仅向包含指定 roomId 的客户端推送消息**，其他客户端不会收到。
+
+> 使用场景：比赛订阅、频道通知、分组消息推送等。
 
 ---
 
