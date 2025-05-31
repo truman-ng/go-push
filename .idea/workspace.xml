@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b1d0188d-caf6-418a-bc89-83b04745b0e6" name="Changes" comment="fix:  去除" />
+    <list default="true" id="b1d0188d-caf6-418a-bc89-83b04745b0e6" name="Changes" comment="README.md:添加房间号参数的描述">
+      <change afterPath="$PROJECT_DIR$/interface.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -67,7 +70,7 @@
     "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
     "git-widget-placeholder": "main",
     "go.import.settings.migrated": "true",
-    "last_opened_file_path": "/Users/nixonfaud",
+    "last_opened_file_path": "/Users/nixonfaud/Downloads/go/go-push",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
@@ -77,6 +80,9 @@
   }
 }]]></component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/config" />
     </key>
@@ -148,7 +154,8 @@
     <MESSAGE value="fix: 检查请求头是否符合 WebSocket 协议" />
     <MESSAGE value="fix: config" />
     <MESSAGE value="fix:  去除" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix:  去除" />
+    <MESSAGE value="README.md:添加房间号参数的描述" />
+    <option name="LAST_COMMIT_MESSAGE" value="README.md:添加房间号参数的描述" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
