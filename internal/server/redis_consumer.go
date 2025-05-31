@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
+	"go-push/internal/models"
 	"log"
 	"time"
 )
@@ -71,21 +72,42 @@ func startConsuming() {
 					log.Printf("❌ payload 字符串解析失败: %v", err)
 					continue
 				}
-				
+				 msgRoom, ok := finalPayload["roomId"].(string) 
+				if !ok || msgRoom == "" { 	
+					continue 
+				}
+
 				jsonBytes, err := json.Marshal(finalPayload)
 				if err != nil {
 					log.Printf("❌ 最终 JSON 序列化失败: %v", err)
 					continue
 				}
+				for _, client := range clientManager.Clients {
+					if !clientInRoom(client, msgRoom) {
+						continue
+					}
 				
-				select {
-				case clientManager.Broadcast <- jsonBytes:
-				default:
-					log.Printf("⚠️ Broadcast 通道已满，丢弃消息: %s", jsonBytes)
+					select {
+						case clientManager.Broadcast <- jsonBytes:
+						default:
+							log.Printf("⚠️ Broadcast 通道已满，丢弃消息: %s", jsonBytes)
+						}
 				}
+
+				
 				
 				redisClient.XAck(ctx, streamKey, groupName, msg.ID)
 			}
 		}
 	}
 }
+func clientInRoom(client *models.Client, room string) bool {
+	for _, r := range client.RoomIds {
+		if r == room {
+			return true
+		}
+	}
+	return false
+}
+
+
