@@ -90,7 +90,51 @@ Content-Type: application/json
 
 ---
 
-## 🔌 WebSocket 连接方式
+## 健康检查接口（Health Check）
+
+本服务提供了用于 `Kubernetes` 就绪检查（`readinessProbe`）与存活检查（`livenessProbe`）的接口：
+
+### 接口说明
+
+- 路径：`GET /health`
+
+- 端口：`8080`
+
+- 响应示例：
+
+```json
+{
+  "status": "healthy"
+}
+```
+
+### 用途
+
+在 `Kubernetes` 的 `Deployment.yaml` 中，已将该接口配置为健康检查探针：
+
+```yaml
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 3
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+```
+
+- **Readiness Probe**：确保服务已准备好处理请求。
+
+- **Liveness Probe**：确保服务健康运行，若失败会触发自动重启。
+
+---
+
+##  WebSocket 连接方式
 
 连接示例：
 
